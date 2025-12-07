@@ -235,11 +235,14 @@ router.get("/on-shelf", async (req, res) => {
 
         // Chỉ lấy sản phẩm ĐÃ CÓ GIÁ (Đã lên kệ)
         if (price > 0) {
-          // --- BẮT ĐẦU ĐOẠN SỬA ---
+          let finalProductName = trace.productName;
+          // Nếu tên sản phẩm rỗng, đặt tên mặc định
+          if (!finalProductName || finalProductName.trim() === "") {
+            finalProductName = "Sản phẩm nông nghiệp";
+          }
           // Mặc định lấy tên cũ trong Blockchain trước (để chắc chắn có cái mà hiện)
           let finalFarmName = trace.farmName || "Nông trại";
 
-          // Thử tìm trong Database xem có tên mới không
           try {
             // Tìm nông dân theo số điện thoại
             const farmer = await User.findOne({ phone: trace.creatorPhone });

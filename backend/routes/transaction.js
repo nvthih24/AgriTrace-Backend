@@ -322,7 +322,7 @@ router.post("/", jwtAuth, async (req, res) => {
         { productId: data.productId },
         {
           price: data.price,
-          statusCode: 3, // Đang bày bán
+          statusCode: 3,
         }
       );
       // Báo cho Retailer
