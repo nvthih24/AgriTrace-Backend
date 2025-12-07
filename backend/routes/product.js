@@ -334,6 +334,26 @@ router.get("/:id", async (req, res) => {
         .json({ error: "Sản phẩm không tồn tại trên Blockchain" });
     }
 
+    let finalProductName = trace.productName;
+    let finalFarmName = trace.farmName;
+
+    try {
+      // Tìm trong Database để lấy tên tiếng Việt chuẩn nhất
+      const productInDB = await Product.findOne({ productId: productId });
+      if (productInDB) {
+        if (productInDB.productName) finalProductName = productInDB.productName;
+        if (productInDB.farmName) finalFarmName = productInDB.farmName;
+      }
+
+      // Nếu DB chưa có tên Farm (do cũ quá), thử tìm qua bảng User
+      if (!finalFarmName || finalFarmName === "Nông trại") {
+        const farmer = await User.findOne({ phone: trace.creatorPhone });
+        if (farmer && farmer.companyName) finalFarmName = farmer.companyName;
+      }
+    } catch (e) {
+      console.log("Lỗi tìm DB phụ trợ:", e.message);
+    }
+
     // 2. Lấy nhật ký chăm sóc (CareLogs) - Vì mảng trong struct đôi khi trả về lỗi, nên gọi hàm riêng nếu có
     // Nếu trong contract ông có hàm getCareLogs thì dùng, không thì dùng trace.careLogs
     let careLogs = [];
@@ -347,9 +367,9 @@ router.get("/:id", async (req, res) => {
     // 3. Format dữ liệu cho đẹp (BigInt -> Number)
     const formattedProduct = {
       id: trace.productId,
-      name: trace.productName,
+      name: finalProductName,
       farm: {
-        name: trace.farmName,
+        name: finalFarmName,
         owner: trace.creatorName,
         phone: trace.creatorPhone,
         seed: trace.seedOrigin || "Không rõ nguồn gốc",
