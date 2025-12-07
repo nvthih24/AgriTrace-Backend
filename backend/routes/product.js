@@ -207,22 +207,45 @@ router.get("/retailer-products", jwtAuth, async (req, res) => {
 // API CÔNG KHAI: Lấy danh sách sản phẩm MỚI LÊN KỆ (Status = 3)
 router.get("/on-shelf", async (req, res) => {
   try {
-    // Query MongoDB: Lấy hàng đang bán (statusCode = 3)
-    const products = await Product.find({ statusCode: 3 })
-      .sort({ updatedAt: -1 })
-      .limit(10);
+    const products = [];
+    const nextId = await readContract.nextProductId();
 
-    const formatted = products.map((p) => ({
-      id: p.productId,
-      name: p.productName,
-      price: p.price,
-      image: p.plantingImageUrl,
-      farm: p.farmName,
-    }));
+    let count = 0;
+    // Quét từ mới nhất về cũ
+    for (let i = nextId - 1; i >= 1 && count < 10; i--) {
+      try {
+        const pid = await readContract.indexToProductId(i);
+        const trace = await readContract.getTrace(pid);
+        const price = toNumber(trace.price);
 
-    res.json({ success: true, data: formatted });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+        if (price > 0) {
+          // 🔥 ĐOẠN SỬA QUAN TRỌNG Ở ĐÂY 🔥
+          // 1. Tìm thông tin chủ nông trại mới nhất trong MongoDB bằng SĐT
+          const farmer = await User.findOne({ phone: trace.creatorPhone });
+
+          // 2. Ưu tiên lấy companyName (Tên nông trại mới) > fullName > trace.farmName cũ
+          let displayFarmName = trace.farmName;
+          if (farmer) {
+            if (farmer.companyName) displayFarmName = farmer.companyName;
+            else if (farmer.fullName) displayFarmName = farmer.fullName;
+          }
+
+          products.push({
+            id: pid,
+            name: trace.productName,
+            price: price,
+            image: trace.managerReceiveImageUrl || trace.plantingImageUrl || "",
+
+            // 3. Gán tên mới vào đây
+            farm: displayFarmName,
+          });
+          count++;
+        }
+      } catch (e) {}
+    }
+    res.json({ success: true, data: products });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
