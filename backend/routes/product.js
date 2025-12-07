@@ -16,7 +16,10 @@ const toNumber = (value) => {
 router.get("/my-products", jwtAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
-    // Query MongoDB: Tìm sản phẩm có SĐT trùng với user
+    if (!user || user.role !== "farmer") {
+      return res.status(403).json({ error: "Chỉ nông dân mới xem được" });
+    }
+
     const products = await Product.find({ farmPhone: user.phone }).sort({
       updatedAt: -1,
     });
@@ -27,12 +30,16 @@ router.get("/my-products", jwtAuth, async (req, res) => {
       name: p.productName,
       image: p.plantingImageUrl,
       status:
-        p.statusCode === 3
-          ? "Đang bày bán"
-          : p.statusCode === 4
+        p.statusCode === 4
           ? "Đã bán hết"
+          : p.statusCode === 3
+          ? "Đang bày bán"
+          : p.harvestStatus === 2
+          ? "Thu hoạch bị từ chối"
           : p.harvestStatus === 1
           ? "Đã thu hoạch"
+          : p.plantingStatus === 2
+          ? "Gieo trồng bị từ chối"
           : p.plantingStatus === 1
           ? "Đang trồng"
           : "Chờ duyệt gieo trồng",
@@ -42,7 +49,12 @@ router.get("/my-products", jwtAuth, async (req, res) => {
       harvestDate: p.harvestDate || 0,
     }));
 
-    res.json({ success: true, products: formatted }); // Lưu ý: App đang đọc data['products']
+    console.log(
+      `--> Tải nhanh ${products.length} SP cho nông dân ${user.phone}`
+    );
+
+    // 3. Trả về ngay lập tức
+    res.json({ products: formatted });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
