@@ -1,11 +1,3 @@
-Chào ông, tôi đã phân tích toàn bộ cấu trúc Backend của ông (bao gồm các thư mục `routes`, `models`, `blockchain`, `middleware`...).
-
-Đây là bản **README.md** chuyên nghiệp dành riêng cho **AgriTrace-Backend**. Nó đầy đủ thông tin về cách cài đặt, cấu hình biến môi trường (`.env`), và mô tả các API chính để người khác nhìn vào là biết cách chạy ngay.
-
-Ông tạo file `README.md` trong thư mục gốc của Backend và dán nội dung này vào nhé:
-
----
-
 ### 📄 Nội dung file `README.md` (Backend)
 
 ````markdown
@@ -54,19 +46,32 @@ Chào ông, tôi đã phân tích toàn bộ cấu trúc Backend của ông (bao
 
 ```bash
 AgriTrace-Backend/
-├── blockchain/
-│   ├── contract/          # Source code Smart Contract (Solidity)
-│   └── utils/             # Helper tương tác Blockchain (Signer, Provider)
-├── middleware/            # Auth Middleware (Kiểm tra Token)
-├── models/                # MongoDB Schemas (User, Product, Transaction...)
-├── routes/                # Định nghĩa API Endpoints
-│   ├── auth.js            # Đăng ký, Đăng nhập
-│   ├── product.js         # Quản lý sản phẩm, mùa vụ
-│   ├── transaction.js     # Ghi nhận giao dịch chuỗi cung ứng
-│   ├── upload.js          # Upload ảnh
-│   └── ...
-├── server.js              # Entry point (Khởi chạy server)
-└── package.json           # Danh sách thư viện
+├── 📁 blockchain
+│   ├── 📁 contract
+│   │   ├── 📄 ProductTraceability.sol
+│   │   └── ⚙️ abi.json
+│   └── 📁 utils
+│       └── 📄 signer.js
+├── 📁 middleware
+│   └── 📄 auth.js
+├── 📁 models
+│   ├── 📄 Notification.js
+│   ├── 📄 Product.js
+│   ├── 📄 Transaction.js
+│   ├── 📄 User.js
+│   └── 📄 qrcodes.js
+├── 📁 routes
+│   ├── 📄 auth.js
+│   ├── 📄 forgotPassword.js
+│   ├── 📄 product.js
+│   ├── 📄 qrcodes.js
+│   ├── 📄 transaction.js
+│   └── 📄 upload.js
+├── ⚙️ .gitignore
+├── 📝 README.md
+├── ⚙️ package-lock.json
+├── ⚙️ package.json
+└── 📄 server.js
 ```
 ````
 
@@ -152,13 +157,4 @@ Dự án này được cấp phép theo giấy phép MIT.
 
 ```
 
----
-
-### 💡 Lưu ý quan trọng cho ông:
-
-1.  **Phần `.env`:** Tôi đã liệt kê các biến môi trường dựa trên code ông gửi (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY...`). Ông nhớ kiểm tra lại file `.env` thực tế trên máy ông xem có thiếu biến nào không thì bổ sung vào nhé.
-2.  **Deploy Smart Contract:** Nếu trong dự án này ông có bao gồm cả việc deploy contract (dùng Hardhat/Truffle), ông có thể thêm một mục hướng dẫn deploy. Nhưng tôi thấy ông tách folder blockchain ra khá đơn giản nên viết như trên là đủ dùng rồi.
-3.  **Link Mobile App:** Nhớ thay cái link GitHub Mobile App ở phần Giới thiệu cho chuẩn nhé.
-
-Ông copy vào là Backend nhìn chuyên nghiệp, xịn xò ngay! 🚀
 ```
