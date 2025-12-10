@@ -165,6 +165,12 @@ router.post("/update-profile", jwtAuth, async (req, res) => {
       new: true,
     });
 
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Không tìm thấy người dùng" });
+    }
+
     res.json({
       success: true,
       user: {
@@ -173,9 +179,11 @@ router.post("/update-profile", jwtAuth, async (req, res) => {
         companyName: user.companyName,
         role: user.role,
         avatar: user.avatar,
+        phone: user.phone,
       },
     });
   } catch (e) {
+    console.error("Lỗi update profile:", e);
     res.status(500).json({ error: e.message });
   }
 });
