@@ -214,6 +214,8 @@ router.post("/", jwtAuth, async (req, res) => {
           harvestDate: data.harvestDate,
           statusCode: 2, // Đã thu hoạch (chờ duyệt)
           harvestStatus: 0,
+          quantity: data.quantity || 0,
+          quality: data.quality || "Loại 1",
         }
       );
       // Báo cho chính Nông dân
