@@ -154,7 +154,7 @@ router.post("/update-wallet", jwtAuth, async (req, res) => {
 // ==========================================
 router.post("/update-profile", jwtAuth, async (req, res) => {
   try {
-    const { fullName, companyName, avatar } = req.body;
+    const { fullName, companyName, avatar, address } = req.body;
 
     const updateData = {};
     if (fullName) updateData.fullName = fullName;
@@ -164,6 +164,8 @@ router.post("/update-profile", jwtAuth, async (req, res) => {
     const user = await User.findByIdAndUpdate(req.user.userId, updateData, {
       new: true,
     });
+
+    if (!address) updateData.address = address;
 
     if (!user) {
       return res
@@ -177,6 +179,7 @@ router.post("/update-profile", jwtAuth, async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         companyName: user.companyName,
+        address: user.address,
         role: user.role,
         avatar: user.avatar,
         phone: user.phone,
