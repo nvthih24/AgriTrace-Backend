@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🌾 AgriTrace Backend - Blockchain Supply Chain Server
 
 ![NodeJS](https://img.shields.io/badge/Node.js-18.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
@@ -149,3 +150,5 @@ Mọi đóng góp đều được hoan nghênh. Vui lòng tạo Pull Request đ�
 ## 📄 Bản quyền (License)
 
 Dự án này được cấp phép theo giấy phép MIT.
+=======
+# Server3TMLdApP
