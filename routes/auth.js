@@ -206,4 +206,17 @@ router.get("/notifications", jwtAuth, async (req, res) => {
   }
 });
 
+router.post("/save-device-token", async (req, res) => {
+  try {
+    const { userId, token } = req.body;
+
+    // Tìm user và update token mới nhất cho họ
+    await User.findByIdAndUpdate(userId, { fcmToken: token });
+
+    res.status(200).json({ message: "Đã lưu token thiết bị thành công!" });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 module.exports = router;

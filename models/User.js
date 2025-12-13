@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     lowercase: true,
   },
+  fcmToken: { type: String, default: "" },
 });
 
 userSchema.pre("save", async function () {

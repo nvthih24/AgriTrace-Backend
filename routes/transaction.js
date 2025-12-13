@@ -6,6 +6,8 @@ const jwtAuth = require("../middleware/auth");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const Notification = require("../models/Notification");
+const { sendPushNotification } = require("../config/firebaseConfig");
+// ==========================================
 
 router.post("/", jwtAuth, async (req, res) => {
   try {
@@ -143,6 +145,24 @@ router.post("/", jwtAuth, async (req, res) => {
       }
     };
 
+    // 🛠️ Helper: Hàm gửi Noti cho một nhóm người (Ví dụ: gửi cho tất cả Moderator)
+    const notifyRole = async (roleName, title, body) => {
+      const users = await User.find({ role: roleName }); // roleName phải khớp với DB (ví dụ: 'moderator', 'transporter')
+      users.forEach((user) => {
+        if (user.fcmToken) {
+          sendPushNotification(user.fcmToken, title, body);
+        }
+      });
+    };
+
+    // 🛠️ Helper: Hàm gửi Noti cho 1 người cụ thể (Ví dụ: gửi lại cho Nông dân)
+    const notifyUser = async (userId, title, body) => {
+      const user = await User.findById(userId);
+      if (user && user.fcmToken) {
+        sendPushNotification(user.fcmToken, title, body);
+      }
+    };
+
     // --- TẠO SẢN PHẨM MỚI ---
     if (action === "addProduct") {
       await Product.create({
@@ -168,6 +188,12 @@ router.post("/", jwtAuth, async (req, res) => {
         "🌱 Yêu cầu Gieo trồng mới",
         `Nông dân ${currentUser.fullName} vừa thêm lô hàng ${data.productName}.`
       );
+      // 🔥 [PUSH NOTIFICATION] -> Báo cho Moderator duyệt ngay
+      await notifyRole(
+        "moderator",
+        "🌱 Yêu cầu Gieo trồng mới",
+        `Nông dân ${currentUser.fullName} vừa thêm lô hàng ${data.productName}. Vào duyệt ngay!`
+      );
     }
 
     // --- CẬP NHẬT TRẠNG THÁI ---
@@ -187,6 +213,14 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Lô hàng ${updatedProduct.productName} của bạn đã được duyệt. Hãy bắt đầu canh tác!`,
           type: "success",
         });
+        // 🔥 [PUSH NOTIFICATION] -> Ting ting cho Nông dân mừng
+        if (farmer.fcmToken) {
+          sendPushNotification(
+            farmer.fcmToken,
+            "✅ Đã duyệt gieo trồng",
+            `Lô hàng ${updatedProduct.productName} đã được duyệt. Triển khai thôi!`
+          );
+        }
       }
     } else if (action === "rejectPlanting") {
       const updatedProduct = await Product.findOneAndUpdate(
@@ -203,6 +237,14 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Yêu cầu gieo trồng ${updatedProduct.productName} không đạt yêu cầu.`,
           type: "error",
         });
+        // 🔥 [PUSH NOTIFICATION] -> Báo buồn cho Nông dân
+        if (farmer.fcmToken) {
+          sendPushNotification(
+            farmer.fcmToken,
+            "❌ Từ chối gieo trồng",
+            `Lô hàng ${updatedProduct.productName} không đạt yêu cầu. Vui lòng kiểm tra lại.`
+          );
+        }
       }
     }
 
@@ -232,6 +274,12 @@ router.post("/", jwtAuth, async (req, res) => {
         "✂️ Yêu cầu Thu hoạch",
         `Nông dân ${currentUser.fullName} muốn thu hoạch lô hàng ${data.productName}.`
       );
+      // 🔥 [PUSH NOTIFICATION] -> Gọi Kiểm duyệt viên (Moderator) vào kiểm hàng gấp
+      await notifyRole(
+        "moderator",
+        "✂️ Yêu cầu Thu hoạch mới",
+        `Nông dân ${currentUser.fullName} vừa thu hoạch ${data.quantity}kg ${data.productName}. Cần kiểm định!`
+      );
     } else if (action === "approveHarvest") {
       const updatedProduct = await Product.findOneAndUpdate(
         { productId: data.productId },
@@ -247,11 +295,24 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Lô hàng ${updatedProduct.productName} đã sẵn sàng xuất kho.`,
           type: "success",
         });
+        // 🔥 [PUSH NOTIFICATION] -> Báo Nông dân
+        if (farmer.fcmToken)
+          sendPushNotification(
+            farmer.fcmToken,
+            "✅ Thu hoạch đạt chuẩn",
+            `Sản phẩm ${updatedProduct.productName} đã được duyệt và sẵn sàng xuất đi.`
+          );
       }
       // Có thể thêm thông báo cho Bộ phận Vận chuyển ở đây nếu cần
       await notifyAllModerators(
         "🚛 Thu hoạch được duyệt",
         `Lô hàng ${updatedProduct.productName} đã được duyệt thu hoạch và sẵn sàng vận chuyển.`
+      );
+      // 🔥 [PUSH NOTIFICATION] -> Gọi Đội Vận Chuyển (Transporter) tới bốc hàng
+      await notifyRole(
+        "transporter",
+        "🚛 Có đơn hàng mới",
+        `Lô hàng ${updatedProduct.productName} đã sẵn sàng vận chuyển. Nhận đơn ngay!`
       );
     } else if (action === "rejectHarvest") {
       const updatedProduct = await Product.findOneAndUpdate(
@@ -268,6 +329,13 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Vui lòng kiểm tra lại lô hàng ${updatedProduct.productName}.`,
           type: "error",
         });
+        // 🔥 [PUSH NOTIFICATION]
+        if (farmer.fcmToken)
+          sendPushNotification(
+            farmer.fcmToken,
+            "❌ Thu hoạch không đạt",
+            `Chất lượng lô hàng ${updatedProduct.productName} không đạt yêu cầu.`
+          );
       }
     }
 
@@ -316,6 +384,12 @@ router.post("/", jwtAuth, async (req, res) => {
         message: `Lô hàng ${data.productId} đã được giao đến cửa hàng.`,
         type: "success",
       });
+      // 🔥 [PUSH NOTIFICATION] -> Gọi Nhà Bán Lẻ (Manager/Retailer) ra nhận hàng
+      await notifyRole(
+        "manager",
+        "📦 Hàng đã đến nơi",
+        `Lô hàng ${data.productId} đã được giao đến cửa hàng. Vui lòng xác nhận!`
+      );
     }
 
     // --- BÁN LẺ ---
@@ -334,6 +408,12 @@ router.post("/", jwtAuth, async (req, res) => {
         message: `Sản phẩm đã được niêm yết giá: ${data.price} VNĐ.`,
         type: "success",
       });
+      // 🔥 [PUSH NOTIFICATION] -> Báo lại cho Admin hoặc chính người quản lý (nếu cần)
+      await notifyRole(
+        "admin",
+        "💰 Sản phẩm đã lên kệ",
+        `Sản phẩm ${data.productId} đang được bán với giá ${data.price}.`
+      );
     } else if (action === "deactivateProduct") {
       await Product.findOneAndUpdate(
         { productId: data.productId },

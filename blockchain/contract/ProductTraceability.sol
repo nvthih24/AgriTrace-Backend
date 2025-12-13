@@ -32,7 +32,6 @@ contract ProductTraceability is AccessControl {
         uint256 harvestDate;
         string harvestImageUrl;
         string transporterName;
-        
         uint256 receiveDate;
         string receiveImageUrl;
         uint256 deliveryDate;
@@ -48,8 +47,8 @@ contract ProductTraceability is AccessControl {
         uint8 harvestStatus;
         // === MỚI: Nhật ký chăm sóc ===
         CareLog[] careLogs;
-        uint256 harvestQuantity;  // san luong thu hoach
-        string harvestQuality;    // danh gia chat luong 
+        uint256 harvestQuantity; // san luong thu hoach
+        string harvestQuality; // danh gia chat luong
     }
 
     mapping(string => TraceInfo) public productTraces;
@@ -146,7 +145,6 @@ contract ProductTraceability is AccessControl {
         string memory _creatorName,
         uint256 _harvestQuantity,
         string memory _harvestQuality
-
     ) external onlyRole(FARMER_ROLE) returns (string memory) {
         require(
             bytes(productTraces[_productId].productId).length == 0,
@@ -254,7 +252,6 @@ contract ProductTraceability is AccessControl {
         trace.harvestStatus = 0;
         trace.harvestQuantity = _harvestQuantity;
         trace.harvestQuality = _harvestQuality;
-
 
         emit ProductUpdated(
             _productId,
