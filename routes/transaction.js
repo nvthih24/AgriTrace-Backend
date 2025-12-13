@@ -213,14 +213,12 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Lô hàng ${updatedProduct.productName} của bạn đã được duyệt. Hãy bắt đầu canh tác!`,
           type: "success",
         });
-        // 🔥 [PUSH NOTIFICATION] -> Ting ting cho Nông dân mừng
-        if (farmer.fcmToken) {
-          sendPushNotification(
-            farmer.fcmToken,
-            "✅ Đã duyệt gieo trồng",
-            `Lô hàng ${updatedProduct.productName} đã được duyệt. Triển khai thôi!`
-          );
-        }
+        // 🔥 SỬ DỤNG notifyUser THAY VÌ VIẾT TAY:
+        await notifyUser(
+          farmer._id,
+          "✅ Đã duyệt gieo trồng",
+          `Lô hàng ${updatedProduct.productName} đã được duyệt. Triển khai thôi!`
+        );
       }
     } else if (action === "rejectPlanting") {
       const updatedProduct = await Product.findOneAndUpdate(
@@ -237,14 +235,13 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Yêu cầu gieo trồng ${updatedProduct.productName} không đạt yêu cầu.`,
           type: "error",
         });
-        // 🔥 [PUSH NOTIFICATION] -> Báo buồn cho Nông dân
-        if (farmer.fcmToken) {
-          sendPushNotification(
-            farmer.fcmToken,
-            "❌ Từ chối gieo trồng",
-            `Lô hàng ${updatedProduct.productName} không đạt yêu cầu. Vui lòng kiểm tra lại.`
-          );
-        }
+
+        // 🔥 SỬ DỤNG notifyUser:
+        await notifyUser(
+          farmer._id,
+          "❌ Từ chối gieo trồng",
+          `Lô hàng ${updatedProduct.productName} không đạt yêu cầu. Vui lòng kiểm tra lại.`
+        );
       }
     }
 
@@ -295,13 +292,13 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Lô hàng ${updatedProduct.productName} đã sẵn sàng xuất kho.`,
           type: "success",
         });
-        // 🔥 [PUSH NOTIFICATION] -> Báo Nông dân
-        if (farmer.fcmToken)
-          sendPushNotification(
-            farmer.fcmToken,
-            "✅ Thu hoạch đạt chuẩn",
-            `Sản phẩm ${updatedProduct.productName} đã được duyệt và sẵn sàng xuất đi.`
-          );
+
+        // 🔥 SỬ DỤNG notifyUser:
+        await notifyUser(
+          farmer._id,
+          "✅ Thu hoạch đạt chuẩn",
+          `Sản phẩm ${updatedProduct.productName} đã được duyệt và sẵn sàng xuất đi.`
+        );
       }
       // Có thể thêm thông báo cho Bộ phận Vận chuyển ở đây nếu cần
       await notifyAllModerators(
@@ -329,13 +326,13 @@ router.post("/", jwtAuth, async (req, res) => {
           message: `Vui lòng kiểm tra lại lô hàng ${updatedProduct.productName}.`,
           type: "error",
         });
-        // 🔥 [PUSH NOTIFICATION]
-        if (farmer.fcmToken)
-          sendPushNotification(
-            farmer.fcmToken,
-            "❌ Thu hoạch không đạt",
-            `Chất lượng lô hàng ${updatedProduct.productName} không đạt yêu cầu.`
-          );
+
+        // 🔥 SỬ DỤNG notifyUser:
+        await notifyUser(
+          farmer._id,
+          "❌ Thu hoạch không đạt",
+          `Chất lượng lô hàng ${updatedProduct.productName} không đạt yêu cầu.`
+        );
       }
     }
 
