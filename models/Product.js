@@ -24,6 +24,10 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, default: 0 }, // Giá bán
 
   updatedAt: { type: Date, default: Date.now },
+
+  quantity: { type: Number, default: 0 }, // Sản lượng
+  unit: { type: String, default: "Kg" }, // Đơn vị (Kg, Tấn...)
+  quality: { type: String, default: "Chưa kiểm định" }, // Chất lượng (VietGAP...)
 });
 
 module.exports = mongoose.model("Product", productSchema);

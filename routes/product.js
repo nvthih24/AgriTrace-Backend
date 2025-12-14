@@ -341,22 +341,29 @@ router.get("/:id", async (req, res) => {
     let harvestQuality = "Chưa kiểm định";
 
     try {
-      // Tìm trong Database để lấy tên tiếng Việt chuẩn nhất
+      // 1. Tìm trong Database để lấy dữ liệu chuẩn nhất
       const productInDB = await Product.findOne({ productId: productId });
+
       if (productInDB) {
+        // Lấy tên tiếng Việt chuẩn (Logic cũ - Giữ nguyên)
         if (productInDB.productName) finalProductName = productInDB.productName;
         if (productInDB.farmName) finalFarmName = productInDB.farmName;
+
+        // 🔥 LOGIC MỚI: Ưu tiên lấy Sản lượng/Chất lượng từ DB trước
+        if (productInDB.quantity && productInDB.quantity > 0) {
+          harvestQty = `${productInDB.quantity} ${productInDB.unit || "Kg"}`;
+          harvestQuality = productInDB.quality || "Chưa kiểm định";
+        }
       }
 
-      // 🔥 LẤY DỮ LIỆU TỪ DB (Nếu đã có)
-      if (productInDB.quantity) {
-        harvestQty = `${productInDB.quantity} ${productInDB.unit || "Kg"}`;
-      }
-      if (productInDB.quality) {
-        harvestQuality = productInDB.quality;
+      // 🔥 LOGIC BỔ SUNG (FALLBACK):
+      // Nếu DB chưa có (vẫn là "Chưa cập nhật") -> Lấy tạm từ Blockchain đắp vào
+      if (harvestQty === "Chưa cập nhật" && trace.harvestQuantity > 0) {
+        harvestQty = `${toNumber(trace.harvestQuantity)} Kg`;
+        harvestQuality = trace.harvestQuality || "Chưa kiểm định";
       }
 
-      // Nếu DB chưa có tên Farm (do cũ quá), thử tìm qua bảng User
+      // Xử lý tên Farm từ bảng User nếu cần (Logic cũ - Giữ nguyên)
       if (!finalFarmName || finalFarmName === "Nông trại") {
         const farmer = await User.findOne({ phone: trace.creatorPhone });
         if (farmer && farmer.companyName) finalFarmName = farmer.companyName;

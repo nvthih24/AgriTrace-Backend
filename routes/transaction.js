@@ -251,9 +251,11 @@ router.post("/", jwtAuth, async (req, res) => {
         { productId: data.productId },
         {
           harvestDate: data.harvestDate,
-          statusCode: 2, // Đã thu hoạch (chờ duyệt)
+          statusCode: 2,
           harvestStatus: 0,
+
           quantity: data.quantity || 0,
+          unit: data.unit || "Kg", // Mặc định là Kg nếu không gửi lên
           quality: data.quality || "Loại 1",
         }
       );
