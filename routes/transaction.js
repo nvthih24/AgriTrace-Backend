@@ -125,10 +125,22 @@ router.post("/", jwtAuth, async (req, res) => {
     // ======================================================
     // BƯỚC 2: CHỜ BLOCKCHAIN XÁC NHẬN (QUAN TRỌNG)
     // ======================================================
-    console.log("--> Đang chờ Blockchain xác nhận...");
-    const receipt = await tx.wait();
-    console.log("✅ Blockchain xác nhận thành công! Tx:", receipt.hash);
+    console.log("🚀 Đã gửi lên Blockchain, Tx Hash:", tx.hash);
 
+    // Cho nó chạy ngầm (Fire and Forget), server không cần đợi
+    tx.wait()
+      .then((receipt) => {
+        console.log(
+          "✅ (Background) Giao dịch đã được đào xong:",
+          receipt.hash
+        );
+      })
+      .catch((err) => {
+        console.error("❌ (Background) Giao dịch bị lỗi:", err);
+      });
+
+    // Giả lập receipt để code bên dưới không bị lỗi
+    const receipt = { hash: tx.hash };
     // ======================================================
     // BƯỚC 3: ĐỒNG BỘ DỮ LIỆU VÀO MONGODB (Database Sync)
     // ======================================================
