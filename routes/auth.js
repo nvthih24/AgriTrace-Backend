@@ -135,9 +135,30 @@ router.get("/me", jwtAuth, async (req, res) => {
 // ==========================================
 router.get("/farmers", async (req, res) => {
   try {
-    // Lấy tất cả user có role là 'farmer', bỏ qua password
-    const farmers = await User.find({ role: "farmer" }).select("-password");
-    res.json({ success: true, data: farmers });
+    // 1. Lấy tham số từ URL (Mặc định: Trang 1, 10 người/trang)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // 2. Lấy danh sách (Có giới hạn số lượng)
+    // .sort({ _id: -1 }) để đưa người mới đăng ký lên đầu
+    const farmers = await User.find({ role: "farmer" })
+      .select("-password") // Không lấy mật khẩu
+      .sort({ _id: -1 }) // Mới nhất lên đầu
+      .skip(skip) // Bỏ qua số lượng của trang trước
+      .limit(limit); // Chỉ lấy đúng số lượng limit
+
+    // 3. Đếm tổng số nông dân (Để App biết đường hiển thị "Trang 1/200")
+    const totalFarmers = await User.countDocuments({ role: "farmer" });
+
+    res.json({
+      success: true,
+      count: farmers.length,
+      total: totalFarmers,
+      totalPages: Math.ceil(totalFarmers / limit),
+      currentPage: page,
+      data: farmers, // Dữ liệu trả về chỉ có tối đa 10 người
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Lỗi lấy danh sách nông dân" });
